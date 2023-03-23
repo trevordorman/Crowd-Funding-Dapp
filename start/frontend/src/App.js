@@ -24,27 +24,21 @@ function App() {
 
   // We need to change these 4 functions to use the new contract
 
-    
-
   const handleCreate = async (e) => {
     await onClickConnect();
     e.preventDefault();
     // we need to create a campaign
 
-
-
-
     setStartBlock("");
     setEndBlock("");
     setGoal("");
-
   };
 
   const handlePledge = async (e) => {
     e.preventDefault();
     await onClickConnect();
     // we need to pledge funds to the campaign
-    
+
     setPledgeAmount("");
     setPledgeId("");
   };
@@ -54,7 +48,6 @@ function App() {
     await onClickConnect();
     // we need to claim the funds from the campaign
 
-   
     setClaimId("");
   };
 
@@ -70,8 +63,6 @@ function App() {
     e.preventDefault();
 
     // We need to get the campaign from the blockchain and save it to state
-
-
 
     setViewModle(!viewModle);
     setClaimId("");
@@ -115,16 +106,16 @@ function App() {
                   className="flex flex-col gap-5 text-start"
                 >
                   <label>
-                    Start Block
+                    Minutes Start
                     <input
                       type="text"
                       value={startBlock}
                       onChange={(e) => setStartBlock(e.target.value)}
-                      className="ml-2 rounded-2xl py-1 px-4 text-black h-10 bg-gray-200"
+                      className="ml-2 rounded-2xl py-1 px-4 text-black h-10 "
                     />
                   </label>
                   <label>
-                    End Block
+                    Minutes End
                     <input
                       type="text"
                       value={endBlock}
@@ -133,7 +124,7 @@ function App() {
                     />
                   </label>
                   <label>
-                    Goal
+                    Goal in Eth
                     <input
                       type="text"
                       value={goal}
@@ -150,17 +141,23 @@ function App() {
                 </form>
               </div>
             )}
-            {viewModle && <div className="my-6 mx-8 rounded-2xl py-6 px-10 bg-gradient-to-tr from-pink-500 via-red-500 to-yellow-500 text-xl font-semibold">
-              <div className="font-bold text-2xl">ID: {campaign.id}</div>
-              <div className="flex flex-row gap-12 justify-center my-4">
-              <div>Start Block: {campaign.startBlock}</div>
-              <div>End Block: {campaign.endBlock}</div>
+            {viewModle && (
+              <div className="my-6 mx-8 rounded-2xl py-6 px-10 bg-gradient-to-tr from-pink-500 via-red-500 to-yellow-500 text-xl font-semibold">
+                <div className="font-bold text-2xl">ID: {campaign.id}</div>
+                <div className="flex flex-row gap-12 justify-center my-4">
+                  <div>Start Block: {campaign.startBlock}</div>
+                  <div>End Block: {campaign.endBlock}</div>
+                </div>
+
+                <div className="my-4">Goal: {campaign.goal}</div>
+                <div className="my-4">
+                  Total Pledged: {campaign.totalPledged}
+                </div>
+                <div className="my-4">
+                  Claimed: {campaign.claimed ? "Yes" : "No"}
+                </div>
               </div>
-              
-              <div className="my-4">Goal: {campaign.goal}</div>
-              <div className="my-4">Total Pledged: {campaign.totalPledged}</div>
-              
-              </div>}
+            )}
           </div>
           <div className="my-6 mx-8 rounded-2xl py-6 px-10 bg-gradient-to-r from-blue-600 to-violet-600 text-xl">
             <form

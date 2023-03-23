@@ -2,6 +2,7 @@ import logo from "./logo.svg";
 import "./App.css";
 import { useState } from "react";
 import { ethers } from "ethers";
+import fundme from "./CrowdFund.json";
 
 function App() {
   const [currentAccount, setCurrentAccount] = useState();
@@ -20,7 +21,11 @@ function App() {
     endBlock: -1,
     goal: -1,
     totalPledged: -1,
+    claimed: false,
   });
+  const [contract, setContract] = useState();
+  const contractAddress = "0x9bC13467a9309f95Cb5190EEf9b15c5254402287";
+  let signer;
 
   // We need to change these 4 functions to use the new contract
 
@@ -28,6 +33,15 @@ function App() {
     await onClickConnect();
     e.preventDefault();
     // we need to create a campaign
+    if (contract == undefined) {
+      return;
+    }
+    // get the current time in unix epoch value and add the minutes entered by the user
+    let start = parseInt(Date.now() / 1000 + 60 * startBlock);
+    let finish = parseInt(Date.now() / 1000 + 60 * endBlock);
+    let launchGoal = ethers.utils.parseEther(goal);
+
+    await contract.launch(launchGoal, start, finish);
 
     setStartBlock("");
     setEndBlock("");
@@ -38,6 +52,11 @@ function App() {
     e.preventDefault();
     await onClickConnect();
     // we need to pledge funds to the campaign
+    if (contract == undefined) {
+      return;
+    }
+    const options = { value: ethers.utils.parseEther(pledgeAmount) };
+    await contract.pledge(pledgeId, options);
 
     setPledgeAmount("");
     setPledgeId("");
@@ -47,6 +66,10 @@ function App() {
     e.preventDefault();
     await onClickConnect();
     // we need to claim the funds from the campaign
+    if (contract == undefined) {
+      return;
+    }
+    await contract.claim(claimId);
 
     setClaimId("");
   };
@@ -56,13 +79,21 @@ function App() {
       setViewModle(!viewModle);
       return;
     }
-    if (claimId < 0 || claimId == "") {
+    if (claimId < 0 || claimId == "" || contract == undefined) {
       return;
     }
     await onClickConnect();
     e.preventDefault();
-
-    // We need to get the campaign from the blockchain and save it to state
+    // We need to get the campaign from the blockchain and save it to campaign state
+    let camp = await contract.campaigns(claimId);
+    setCampaign({
+      id: claimId,
+      startBlock: camp[3],
+      endBlock: camp[4],
+      goal: ethers.utils.formatEther(camp[1]),
+      totalPledged: ethers.utils.formatEther(camp[2]),
+      claimed: camp[5],
+    });
 
     setViewModle(!viewModle);
     setClaimId("");
@@ -80,6 +111,10 @@ function App() {
         if (accounts.length > 0) setCurrentAccount(accounts[0]);
       })
       .catch((e) => console.log(e));
+
+    signer = provider.getSigner();
+
+    setContract(new ethers.Contract(contractAddress, fundme.abi, signer));
   };
 
   return (
@@ -106,16 +141,16 @@ function App() {
                   className="flex flex-col gap-5 text-start"
                 >
                   <label>
-                    Start Block
+                    Minutes Start
                     <input
                       type="text"
                       value={startBlock}
                       onChange={(e) => setStartBlock(e.target.value)}
-                      className="ml-2 rounded-2xl py-1 px-4 text-black h-10 bg-gray-200"
+                      className="ml-2 rounded-2xl py-1 px-4 text-black h-10 "
                     />
                   </label>
                   <label>
-                    End Block
+                    Minutes End
                     <input
                       type="text"
                       value={endBlock}
@@ -124,7 +159,7 @@ function App() {
                     />
                   </label>
                   <label>
-                    Goal
+                    Goal in Eth
                     <input
                       type="text"
                       value={goal}
@@ -152,6 +187,9 @@ function App() {
                 <div className="my-4">Goal: {campaign.goal}</div>
                 <div className="my-4">
                   Total Pledged: {campaign.totalPledged}
+                </div>
+                <div className="my-4">
+                  Claimed: {campaign.claimed ? "Yes" : "No"}
                 </div>
               </div>
             )}
